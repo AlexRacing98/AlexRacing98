@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <title>BGN → EUR (БНБ курс)</title>
+</head>
+<body>
+  <h3>Конвертор с официален курс от БНБ</h3>
+
+  <label>Сума в лева: <input id="bgn" type="number" step="0.01"></label>
+  <button onclick="convert()">Пресметни</button>
+
+  <p id="result"></p>
+
+  <script>
+    async function getRate() {
+      const url = "https://www.bnb.bg/Statistics/StExternalSector/StExchangeRates/StERForeignCurrencies/index.htm?download=xml&search=&lang=BG";
+      const res = await fetch(url);
+      const text = await res.text();
+      const xml = new window.DOMParser().parseFromString(text, "text/xml");
+
+      const rows = xml.getElementsByTagName("ROW");
+      for (let row of rows) {
+        if (row.getElementsByTagName("CODE")[0].textContent === "EUR") {
+          return parseFloat(row.getElementsByTagName("RATE")[0].textContent.replace(",", "."));
+        }
+      }
+    }
+
+    async function convert() {
+      const rate = await getRate();
+      const bgn = parseFloat(document.getElementById('bgn').value || '0');
+
+      const eurExact = bgn / rate;
+      const eurRoundedUp = Math.ceil(eurExact);
+      const bgnFromRounded = eurRoundedUp * rate;
+
+      document.getElementById('result').innerText =
+        `Курс от БНБ: 1 EUR = ${rate} лв
+Реално евро: ${eurExact.toFixed(2)} EUR
+Закръглено нагоре: ${eurRoundedUp} EUR
+Това в лева: ${bgnFromRounded.toFixed(2)} лв`;
+    }
+  </script>
+</body>
+</html>
